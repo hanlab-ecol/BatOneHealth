@@ -1,5 +1,5 @@
 #'A function to attach Australian environmental data to a given set of points, years, and months
-#'@param points These are the points that will have data attached to them. For now, this argument only accepts a data.frame with two columns (representing longitude and latitude) with a coordinate reference system of GDA 2020 (EPSG:8059)
+#'@param points These are the points that will have data attached to them. This argument accepts either a data.frame with two columns (representing longitude and latitude) with a coordinate reference system of GDA 2020 (EPSG:8059) or an sf object with a coordinate reference system of GDA 2020.
 #'@param path This is the path to the directory that includes all of the environmental data for Australia. By default, this grabs the current working directory.
 #'@param variables This is a bit of a placeholder that now only takes the option to grab all variables, but may eventually be removed or used to only grab certain variables.
 #'@param year A vector of years that must match the number of points in the same order as the year information associated with each point.
@@ -8,6 +8,16 @@
 #'@example 
 #'attachAustraliaEnv(PNTS, path = "~/Desktop/AustralianClimateData/", variables = "all", year = c(2019, 2019, 2019, 2017, 2016), month = c(5, 8, 8, 7, 2))
 attachAustraliaEnv <- function(points, path = getwd(), variables = c("all", ...), year, month) {
+  if(sum(class(points) %in% c("sf", "data.frame")) == 0) stop("Points argument does not seem to be of class data.frame or an sf object.")
+  if(nrow(points) != length(year)) stop("Vector of years does not match with the number of points given. Check the length of years and match to the number of points.")
+  if(nrow(points) != length(month)) stop("Vector of months does not match with the number of points give. Check the length of years and match to the number of points.")
+  if(class(points) == "data.frame" & sum(class(points) == "sf") == 0) {
+    if(max(points) <= 180) message("The maximum coordinate value is less than or equal to 180, which means that these points may not be in the Geodetic Datum of Australia 2020. As a result, the environmental data may not match with these points and will result in a data.frame of mostly NAs. Please transform these data and try again.")
+  }
+  if(sum(class(points) == "sf") == 1) {
+    if(st_crs(points)$input != "EPSG:8059") stop("The coordinate reference system for this object is not equivalent to the environmental data. Please transform these points using `sf::st_transform` to EPSG:8059 and then rerun.")
+    points <- st_coordinates(points)
+  }
   DIST <- cbind.data.frame(year = year,
                            month = month) %>%
     distinct(year, month)
