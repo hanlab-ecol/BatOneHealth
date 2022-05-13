@@ -11,12 +11,12 @@ attachAustraliaEnv <- function(points, path = getwd(), variables = c("all", ...)
   if(sum(class(points) %in% c("sf", "data.frame")) == 0) stop("Points argument does not seem to be of class data.frame or an sf object.")
   if(nrow(points) != length(year)) stop("Vector of years does not match with the number of points given. Check the length of years and match to the number of points.")
   if(nrow(points) != length(month)) stop("Vector of months does not match with the number of points give. Check the length of years and match to the number of points.")
-  if(class(points) == "data.frame" & sum(class(points) == "sf") == 0) {
+  if(sum(class(points) %in% "data.frame") == 1 & sum(class(points) %in% "sf") == 0) {
     if(max(points) <= 180) message("The maximum coordinate value is less than or equal to 180, which means that these points may not be in the Geodetic Datum of Australia 2020. As a result, the environmental data may not match with these points and will result in a data.frame of mostly NAs. Please transform these data and try again.")
   }
-  if(sum(class(points) == "sf") == 1) {
+  if(sum(class(points) %in% "sf") == 1) {
     if(st_crs(points)$input != "EPSG:8059") stop("The coordinate reference system for this object is not equivalent to the environmental data. Please transform these points using `sf::st_transform` to EPSG:8059 and then rerun.")
-    points <- st_coordinates(points)
+    points <- data.frame(st_coordinates(points))
   }
   DIST <- cbind.data.frame(year = year,
                            month = month) %>%
@@ -110,6 +110,52 @@ attachAustraliaEnv <- function(points, path = getwd(), variables = c("all", ...)
                    ONI_18mon = ONI_18mon,
                    ONI_21mon = ONI_21mon,
                    ONI_24mon = ONI_24mon)
+    SOI <- read.csv(paste0(path, "soi.csv"), row.names = 1)
+    SOI <- t(as.matrix(SOI))
+    NUMS <- sapply(1:nrow(dretn), function(i) (which(year[i] == 1951:2022) - 1) * 12 + month[i])
+    SOIm <- sapply(NUMS, function(i) SOI[i])
+    SOI_2mon <- sapply(NUMS, function(i) SOI[i - 2])
+    SOI_3mon <- sapply(NUMS, function(i) SOI[i - 3])
+    SOI_6mon <- sapply(NUMS, function(i) SOI[i - 6])
+    SOI_9mon <- sapply(NUMS, function(i) SOI[i - 9])
+    SOI_12mon <- sapply(NUMS, function(i) SOI[i - 12])
+    SOI_15mon <- sapply(NUMS, function(i) SOI[i - 15])
+    SOI_18mon <- sapply(NUMS, function(i) SOI[i - 18])
+    SOI_21mon <- sapply(NUMS, function(i) SOI[i - 21])
+    SOI_24mon <- sapply(NUMS, function(i) SOI[i - 24])
+    dretn <-mutate(dretn, SOI = SOIm,
+                   SOI_2mon = SOI_2mon,
+                   SOI_3mon = SOI_3mon,
+                   SOI_6mon = SOI_6mon,
+                   SOI_9mon = SOI_9mon,
+                   SOI_12mon = SOI_12mon,
+                   SOI_15mon = SOI_15mon,
+                   SOI_18mon = SOI_18mon,
+                   SOI_21mon = SOI_21mon,
+                   SOI_24mon = SOI_24mon)
+    SAM <- read.table(paste0(path, "newsam.1957.2007.txt"), fill = T)
+    SAM <- t(as.matrix(SAM))
+    NUMS <- sapply(1:nrow(dretn), function(i) (which(year[i] == 1957:2022) - 1) * 12 + month[i])
+    SAMm <- sapply(NUMS, function(i) SAM[i])
+    SAM_2mon <- sapply(NUMS, function(i) SAM[i - 2])
+    SAM_3mon <- sapply(NUMS, function(i) SAM[i - 3])
+    SAM_6mon <- sapply(NUMS, function(i) SAM[i - 6])
+    SAM_9mon <- sapply(NUMS, function(i) SAM[i - 9])
+    SAM_12mon <- sapply(NUMS, function(i) SAM[i - 12])
+    SAM_15mon <- sapply(NUMS, function(i) SAM[i - 15])
+    SAM_18mon <- sapply(NUMS, function(i) SAM[i - 18])
+    SAM_21mon <- sapply(NUMS, function(i) SAM[i - 21])
+    SAM_24mon <- sapply(NUMS, function(i) SAM[i - 24])
+    dretn <-mutate(dretn, SAM = SAMm,
+                   SAM_2mon = SAM_2mon,
+                   SAM_3mon = SAM_3mon,
+                   SAM_6mon = SAM_6mon,
+                   SAM_9mon = SAM_9mon,
+                   SAM_12mon = SAM_12mon,
+                   SAM_15mon = SAM_15mon,
+                   SAM_18mon = SAM_18mon,
+                   SAM_21mon = SAM_21mon,
+                   SAM_24mon = SAM_24mon)
     return(dretn)
   }
 }
