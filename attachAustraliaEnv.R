@@ -8,15 +8,23 @@
 #'@example 
 #'attachAustraliaEnv(PNTS, path = "~/Desktop/AustralianClimateData/", variables = "all", year = c(2019, 2019, 2019, 2017, 2016), month = c(5, 8, 8, 7, 2))
 attachAustraliaEnv <- function(points, path = getwd(), variables = c("all", ...), year, month) {
+  if(length(year) != 1 & length(year) != nrow(points)) stop("The vector of years given does not match the number of points given. Please adjust vector to a length of size 1 or ", nrow(points), ".")
+  if(length(month) != 1 & length(month) != nrow(points)) stop("The vector of months given does not match the number of points given. Please adjust vector to a length of size 1 or ", nrow(points), ".")
   if(sum(class(points) %in% c("sf", "data.frame")) == 0) stop("Points argument does not seem to be of class data.frame or an sf object.")
-  if(nrow(points) != length(year)) stop("Vector of years does not match with the number of points given. Check the length of years and match to the number of points.")
-  if(nrow(points) != length(month)) stop("Vector of months does not match with the number of points give. Check the length of years and match to the number of points.")
   if(sum(class(points) %in% "data.frame") == 1 & sum(class(points) %in% "sf") == 0) {
     if(max(points) <= 180) message("The maximum coordinate value is less than or equal to 180, which means that these points may not be in the Geodetic Datum of Australia 2020. As a result, the environmental data may not match with these points and will result in a data.frame of mostly NAs. Please transform these data and try again.")
   }
   if(sum(class(points) %in% "sf") == 1) {
     if(st_crs(points)$input != "EPSG:8059") stop("The coordinate reference system for this object is not equivalent to the environmental data. Please transform these points using `sf::st_transform` to EPSG:8059 and then rerun.")
     points <- data.frame(st_coordinates(points))
+  }
+  if(length(year) == 1) {
+    warning("A vector of length 1 has been provided for year. Year information for all points will be set to ", year, ". Please adjust this argument if this is not desired.")
+    year <- rep(year, nrow(points))
+  }
+  if(length(month) == 1) {
+    warning("A vector of length 1 has been provided for month. Month information for all points will be set to ", month, ". Please adjust this argument if this is not desired.")
+    month <- rep(month, nrow(points))
   }
   DIST <- cbind.data.frame(year = year,
                            month = month) %>%
