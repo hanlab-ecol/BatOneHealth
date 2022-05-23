@@ -7,7 +7,7 @@
 #'@return The result of this function will be a data.frame object with the environmental information attached for each point for its given year and month. 
 #'@example 
 #'attachAustraliaEnv(PNTS, path = "~/Desktop/AustralianClimateData/", variables = "all", year = c(2019, 2019, 2019, 2017, 2016), month = c(5, 8, 8, 7, 2))
-attachAustraliaEnv <- function(points, path = getwd(), variables = c("all", ...), year, month) {
+attachAustraliaEnv <- function(points, path = getwd(), variables = c("all"), year, month) {
   if(length(year) != 1 & length(year) != nrow(points)) stop("The vector of years given does not match the number of points given. Please adjust vector to a length of size 1 or ", nrow(points), ".")
   if(length(month) != 1 & length(month) != nrow(points)) stop("The vector of months given does not match the number of points given. Please adjust vector to a length of size 1 or ", nrow(points), ".")
   if(sum(class(points) %in% c("sf", "data.frame")) == 0) stop("Points argument does not seem to be of class data.frame or an sf object.")
