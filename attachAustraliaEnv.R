@@ -4,10 +4,11 @@
 #'@param variables This is a bit of a placeholder that now only takes the option to grab all variables, but may eventually be removed or used to only grab certain variables.
 #'@param year A vector of years that must match the number of points in the same order as the year information associated with each point.
 #'@param month A vector of months that similar to the year argument must be given in the same order as the points.
+#'@param log.transform A vector of variable names referring to those variables that will be log transformed (with the transformations added to the final data.frame). The default is null, meaning no variables will log transformed.
 #'@return The result of this function will be a data.frame object with the environmental information attached for each point for its given year and month. 
 #'@example 
 #'attachAustraliaEnv(PNTS, path = "~/Desktop/AustralianClimateData/", variables = "all", year = c(2019, 2019, 2019, 2017, 2016), month = c(5, 8, 8, 7, 2))
-attachAustraliaEnv <- function(points, path = getwd(), variables = c("all"), year, month) {
+attachAustraliaEnv <- function(points, path = getwd(), variables = c("all"), year, month, log.transform = NULL) {
   if(length(year) != 1 & length(year) != nrow(points)) stop("The vector of years given does not match the number of points given. Please adjust vector to a length of size 1 or ", nrow(points), ".")
   if(length(month) != 1 & length(month) != nrow(points)) stop("The vector of months given does not match the number of points given. Please adjust vector to a length of size 1 or ", nrow(points), ".")
   if(sum(class(points) %in% c("sf", "data.frame")) == 0) stop("Points argument does not seem to be of class data.frame or an sf object.")
@@ -164,6 +165,19 @@ attachAustraliaEnv <- function(points, path = getwd(), variables = c("all"), yea
                    SAM_18mon = SAM_18mon,
                    SAM_21mon = SAM_21mon,
                    SAM_24mon = SAM_24mon)
+    if(!is.null(log.transform)) {
+      lretn <- do.call(cbind.data.frame, lapply(log.transform, function(k) {
+        if(min(dretn[, k], na.rm = T) < 0) {
+          log(dretn[, k] + abs(min(dretn[, k], na.rm = T)))
+        }
+        else if(min(dretn[, k], na.rm = T) == 0) {
+          log(dretn[, k] + 0.1)
+        }
+        else log(dretn[, k])
+      }))
+      colnames(lretn) <- paste0("log_", log.transform)
+      dretn <- cbind(dretn, lretn)
+    }
     return(dretn)
   }
 }
