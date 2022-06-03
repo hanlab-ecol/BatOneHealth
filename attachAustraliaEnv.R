@@ -165,6 +165,12 @@ attachAustraliaEnv <- function(points, path = getwd(), variables = c("all"), yea
                    SAM_18mon = SAM_18mon,
                    SAM_21mon = SAM_21mon,
                    SAM_24mon = SAM_24mon)
+    nan_names <- names(which(apply(dretn, 2, function(i) sum(is.nan(i)) > 0) == 1))
+    if(length(nan_names) > 0) {
+      for(k in nan_names) {
+        dretn[is.nan(dretn[, k]), k] <- NA
+      }
+    }
     if(!is.null(log.transform)) {
       lretn <- do.call(cbind.data.frame, lapply(log.transform, function(k) {
         if(min(dretn[, k], na.rm = T) < 0) {
