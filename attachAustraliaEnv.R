@@ -58,12 +58,12 @@ attachAustraliaEnv <- function(points, path = getwd(), variables = c("all"), yea
           }
         }))
       })
-      RAST1 <- do.call(c, VALS[c(1:5, 7, 11)])
-      RAST2 <- do.call(c, VALS[c(6, 9:10)])
-      RAST3 <- VALS[[8]]
-      RAST1 <- crop(RAST1, RAST2)
-      RAST3 <- resample(RAST3, RAST1[[1]])
-      VALS <- c(RAST1, RAST2, RAST3)
+      #RAST1 <- do.call(c, VALS[c(1:5, 7, 11)])
+      #RAST2 <- do.call(c, VALS[c(6, 9:10)])
+      #RAST3 <- VALS[[8]]
+      #RAST1 <- crop(RAST1, RAST2)
+      #RAST3 <- resample(RAST3, RAST1[[1]])
+      VALS <- do.call(c, VALS)
       retn <- data.frame(terra::extract(VALS, pnt))
       colnames(retn) <- c("ID", "temp_max", "tempMax_2mon", "tempMax_3mon",
                           "tempMax_6mon", "tempMax_9mon", "tempMax_12mon",
