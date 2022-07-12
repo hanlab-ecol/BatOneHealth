@@ -7,5 +7,13 @@ A helper function for the attachAustraliaEnv function that is used to access ras
 ### attachAustraliaEnv
 A function used to attach environmental data to a given set of points for use in further modeling processes. Requires a two column data.frame of coordinates in the GDA 2020 coordinate reference system (or an sf points object with the same CRS) along with vectors of years and months related to those points.
 
+### \data
+
+### locations_sites.csv 
+csv file of roost location estimates from Hume et al 2015 PLoS One paper
+
+### hendra-virus-transmission-data-east-australia.csv
+tested urine pools; downloaded from: https://www.data.qld.gov.au/dataset/hev-infection-flying-foxes-eastern-australia
+
 ### To do list
 * Fix whatever else breaks
