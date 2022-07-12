@@ -12,7 +12,7 @@ A function used to attach environmental data to a given set of points for use in
 ### locations_sites.csv 
 csv file of roost location estimates from Hume et al 2015 PLoS One paper
 
-###
+### hendra-virus-transmission-data-east-australia.csv
 tested urine pools; downloaded from: https://www.data.qld.gov.au/dataset/hev-infection-flying-foxes-eastern-australia
 
 ### To do list
