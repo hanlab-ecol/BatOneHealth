@@ -124,7 +124,7 @@ colnames(monthly_estimates) = c('all_exp', 'foodshortage_exp','foodshortagenew_e
                                 'new_exp','newrehab_exp','rehab_exp')
 monthly_estimates$site = rep(hendra_crs$loc, each=nlyr(all_rast))
 
-for(j in 301:nrow(hendra_crs)){#nrow(hendra_crs)
+for(j in 1:nrow(hendra_crs)){#nrow(hendra_crs)
   #j = 6
   buff =  vect(st_buffer(hendra_crs[j,], dist = 1000))
   for(i in 1:nlyr(all_rast)){
@@ -242,7 +242,7 @@ rmse_roost = as.data.frame(monthly_est_obs2 %>%
                                        mean_rehab= mean(rehab_exp, na.rm = TRUE)
                              ))
 
-rmse_roost
+write.csv(rmse_roost, "output/rmse_summary_calculations.csv", row.names = FALSE)
 #normalized between each roost
 #overall measure > roosts with more data points
 cor(rmse_roost$mean_all, rmse_roost$mean_newrehab) #0.9844378
