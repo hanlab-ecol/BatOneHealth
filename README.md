@@ -20,3 +20,4 @@ tested urine pools; downloaded from: https://www.data.qld.gov.au/dataset/hev-inf
 
 ### To do list
 * Fix whatever else breaks
+* Add in notes about the new functions and data added
