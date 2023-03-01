@@ -1,0 +1,79 @@
+---
+title: "Multi-scale model of Hendra virus dynamics"
+author: "Christina L. Faust, Andrew M. Kramer, Adrian A. Castellanos, Barbara A. Han"
+date: "`r Sys.Date()`"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+First we will load in all of the packages that you will need to run the estimatePrevalence function and its helper functions. The lines included here should install any packages needed that you haven't previously installed. Also make sure to set the working directory (`setwd()`) to a folder that contains the environmental data folder and model objects (here, it is a folder called DARPA in my Desktop).
+```{r loadPackages, warning=F, results = "hide", message=F}
+packages <- c("raster", "gbm", "sf", "terra", "dplyr", "magrittr", "foreach", "doRNG", "truncnorm", "mgcv", "doSNOW", "parallel")
+npack <- packages[!(packages %in% installed.packages()[,"Package"])]
+if(length(npack)) install.packages(npack)
+sapply(packages, library, character.only = T)
+setwd("~/Desktop/DARPA") #Switch to working directory that contains the environmental data folder
+```
+
+We will load the various functions from Github to use. If you have an unstable or nonexistent internet connection, feel free to download these functions and change the below code to source them locally. 
+```{r loadFunctions}
+source("https://raw.githubusercontent.com/hanlab-ecol/BatOneHealth/main/getAustraliaEnv.R") #Used in estimatePrevalence function to access specific data frames
+source("https://raw.githubusercontent.com/hanlab-ecol/BatOneHealth/main/attachAustraliaEnv.R") #Used to get the needed data to run various models
+source("https://raw.githubusercontent.com/hanlab-ecol/BatOneHealth/main/estimatePrevalence.R") #Used to get output, requires above functions and accessory functions below
+#All raster directories need to be in the working directory
+source("https://raw.githubusercontent.com/hanlab-ecol/BatOneHealth/main/roost.counts")
+```
+
+The following functions are needed for the estimatePrevalence function as well. `r.location` returns a set of locations for a given number of roosts weighted by the predicted suitability of roosts for a given month. `rehab.prob`, `new.roost.prob`, and `food.shortage.prob` return predictions fo rehab stress, stress related to the formation of new roosts, and food shortage stress given a set of data.
+```{r runFunctions}
+#Select roost locations, function called later 
+r.location <- function(suitability, n){
+  roosts <- spatSample(suitability,n,method="weights",
+             replace=FALSE,na.rm=TRUE,as.points=TRUE)#Returns location(s)
+}
+#function to estimate rehab probability
+rehab.prob <- function(roost.data, rehab.model){
+  DATA <- as.data.frame(roost.data)
+  rehab <- predict(rehab.model, newdata=DATA, type="response", verbose=FALSE)
+  roost.data <- cbind(roost.data,rehab)
+  return(roost.data)
+}
+#function to estimate new roost probability
+new.roost.prob <- function(roost.data, new.roost.model){
+  DATA <- as.data.frame(roost.data)
+  new.roost <- predict(new.roost.model,newdata=DATA, type="response",verbose=FALSE)
+  roost.data <- cbind(roost.data,new.roost)
+  return(roost.data)
+}
+#function to return food shortage probability
+food.shortage.prob <- function(food.shortage.pred, date, lag_months){
+  date <- date
+  num <- which(food.shortage.pred$Date==date)
+  return(mean(food.shortage.pred[(num - lag_months):num, "Probability"]))
+}
+```
+
+To speed up time, the `estimatePrevalence` function can be run in parallel. You can use the `detectCores` function from {parallel} to find out how many cores are available to you. Here, I have 8 cores available and will use 7 so that my computer doesn't start hissing at me if I check my email. If you don't have to run the function in parallel, skip this step.
+```{r parallel}
+#parallel::detectCores()
+cl <- parallel::makeCluster(7, "SOCK")
+doSNOW::registerDoSNOW(cl)
+```
+
+Here is the `estimatePrevalence` function, finally. You can adjust the year range (here it shows the maximum allowable range given the data we have), the number of repetitions to run, the buffer (in meters) around the chosen roost locations, the reference prevalence (the maximum value allowed), the number of months to average food shortage stress by and the number of months to average rehab and new roost stress. You can see the `estimatePrevalence` function on the [Github](https://github.com/hanlab-ecol/BatOneHealth/blob/main/estimatePrevalence.R) for more information on what each argument is. If you did not choose to paralellize this workflow above, set the cl argument to NULL (`cl = NULL`).
+```{r estimatePrevalence}
+output <-estimatePrevalence(years=2008:2019,
+                            months=1:12,
+                            reps=100,
+                            buffer = 50000,
+                            ref.prevalence=0.66,
+                            food_lag_months = 12,
+                            lag_n = 12,
+                            models = c("food shortage", "rehab"),
+                            averaging = NA,
+                            cl = cl,
+                            return.stack=FALSE)
+```
