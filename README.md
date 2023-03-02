@@ -23,10 +23,10 @@ This is the main function used to estimate prevalence within our study area. Giv
 These are descriptions of all of the objects placed in \data
 
 ### locations_sites.csv 
-A CSV file of roost location estimates from [Hume et al. 2015 PLoS One paper](https://doi.org/10.1371/journal.pone.0144055).
+A CSV file of roost location estimates from [Field et al. 2015 PLoS One paper](https://doi.org/10.1371/journal.pone.0144055).
 
 ### hendra-virus-transmission-data-east-australia.csv
-Hendra virus prevalence data from tested urine pools by [Hume et al. 2015](https://doi.org/10.1371/journal.pone.0144055). These data are accessible from the Queensland government's [Open Data Portal](https://www.data.qld.gov.au/dataset/hev-infection-flying-foxes-eastern-australia).
+Hendra virus prevalence data from tested urine pools by [Field et al. 2015](https://doi.org/10.1371/journal.pone.0144055). These data are accessible from the Queensland government's [Open Data Portal](https://www.data.qld.gov.au/dataset/hev-infection-flying-foxes-eastern-australia).
 
 ### bff_one_week_per_quarter_ilya.csv
 This is a CSV of black flying fox roost counts summarized from the [Flying Fox Monitoring Program](https://www.data.qld.gov.au/dataset/flying-fox-monitoring-program) by quarter of the year. This dataset is used by the roost.counts function above to estimate the number of roosts for a given month. 
