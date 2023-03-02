@@ -1,5 +1,20 @@
 # Bat One Health Functions for the Multi Scale Modeling Effort
-Here we present a series of functions and code for facilitating the recreation of our multi-scale modeling work as part of Bat One Health. The functions described below enable the estimation of monthly Hendra virus prevalence within a region of eastern Australia from the years 2008 to 2019 at a spatial resolution of 5 km. Most of the functions are a series of helper functions used to allow for the attachment of environmental data to coordinates that are used in all of the component models. These environmental data can be currently found [here](https://drive.google.com/drive/folders/1cfwvPG9wID0MgaP332Dt2KXR_zsZXcRR?usp=sharing). Environmental data should be downloaded and placed in a folder named AustraliaClimateData that is to be placed in the working directory. 
+Here we present a series of functions and code for facilitating the recreation of our multi-scale modeling work as part of Bat One Health. The functions described below enable the estimation of monthly Hendra virus prevalence within a region of eastern Australia from the years 2008 to 2019 at a spatial resolution of 5 km. Most of the functions are a series of helper functions used to allow for the attachment of environmental data to coordinates that are used in all of the component models. These environmental data can be currently found [here](https://drive.google.com/drive/folders/1cfwvPG9wID0MgaP332Dt2KXR_zsZXcRR?usp=sharing). 
+
+## Setup
+Environmental data should be downloaded from the link above and placed in a folder named AustraliaClimateData that is to be placed in the working directory. The folder structure should be as follows:
+>Your_Working_Directory
+>\NewRoostPredictedSurfacesModel.Rdata
+>\RehabModel_01062022.Rdata
+>\AustraliaClimateData
+>\\EvapotranspirationLag
+>\\PrecipitationLag
+>\\\PrecipitationLag3Months
+>...
+Make sure that the two model objects found in the data folder of this repository are in your working directory as well as the folder containing all of the environmental data. This setup will help to prevent some troubleshooting problems.
+
+## Expected Output
+The output of the main estimatePrevalence function will be a series of rasters estimating Hendra virus prevalence for all months in the specified years. Depending on the model components chosen (see estimatePrevalence function and MultiScaleExample for more information), you will output rasters for estimated prevalence, rehab stress, new roost stress, and a null expectation of stress derived from roost environmental suitability. The output will always include estimated prevalence and the null expectation, with new roost and rehab stress rasters only created when those model components are included.
 
 ## Descriptions
 The following are descriptions of each of the items included in this repository and how they work together:
