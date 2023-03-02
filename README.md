@@ -1,6 +1,12 @@
 # Bat One Health Functions for the Multi Scale Modeling Effort
 Here we present a series of functions and code for facilitating the recreation of our multi-scale modeling work as part of Bat One Health. The functions described below enable the estimation of monthly Hendra virus prevalence within a region of eastern Australia from the years 2008 to 2019 at a spatial resolution of 5 km. Most of the functions are a series of helper functions used to allow for the attachment of environmental data to coordinates that are used in all of the component models. These environmental data can be currently found [here](https://drive.google.com/drive/folders/1cfwvPG9wID0MgaP332Dt2KXR_zsZXcRR?usp=sharing). Environmental data should be downloaded and placed in a folder named AustraliaClimateData that is to be placed in the working directory. 
 
+## Descriptions
+The following are descriptions of each of the items included in this repository and how they work together:
+
+### MultiScaleExample
+This is an example script showing all of the packages, how to source the functions and data mentioned further below, and how to implement the estimatePrevalence function to generate Hendra virus prevalence predictions for our study area. This file is commented throughout on what each code chunk is doing and further information on each particular function can be found on their respective pages in this repository.
+
 ### getAustraliaEnv
 A helper function for the attachAustraliaEnv function that is used to access raster data for a particular environmental variable matching characteristics given (lag time, year, month).
 
@@ -13,14 +19,23 @@ A function that uses a quarterly survey of roost counts with a generalized addit
 ### estimatePrevalence
 This is the main function used to estimate prevalence within our study area. Given a vector of years and months, this function will estimate prevalence within the area based on stress. If wanted, the user can modify the number of repetitions for each year-month calculation of prevalence, change the reference max prevalence (currently based on estimates from field data from [Field et al. 2015](https://doi.org/10.1371/journal.pone.0144055)), and parallelize the calculations. 
 
-### \data
+## Data descriptions
+These are descriptions of all of the objects placed in \data
 
 ### locations_sites.csv 
-csv file of roost location estimates from Hume et al 2015 PLoS One paper
+A CSV file of roost location estimates from [Hume et al. 2015 PLoS One paper](https://doi.org/10.1371/journal.pone.0144055).
 
 ### hendra-virus-transmission-data-east-australia.csv
-tested urine pools; downloaded from: https://www.data.qld.gov.au/dataset/hev-infection-flying-foxes-eastern-australia
+Hendra virus prevalence data from tested urine pools by [Hume et al. 2015](https://doi.org/10.1371/journal.pone.0144055). These data are accessible from the Queensland government's [Open Data Portal](https://www.data.qld.gov.au/dataset/hev-infection-flying-foxes-eastern-australia).
+
+### bff_one_week_per_quarter_ilya.csv
+This is a CSV of black flying fox roost counts summarized from the [Flying Fox Monitoring Program](https://www.data.qld.gov.au/dataset/flying-fox-monitoring-program) by quarter of the year. This dataset is used by the roost.counts function above to estimate the number of roosts for a given month. 
+
+### NewRoostPredictedSurfacesModel
+This is a gbm model object representing a model trained on roosts that were determined to be newly formed. This model is used to predict stress deriving from the formation of new roosts when used with data from each month queried by the estimatePrevalence function.
+
+### RehabModel_01062022
+This is also a gbm model object representing a model trained on bat rehabilitation data. This model is used to predict stress that would lead to bats ending up at a rehabilitation center (this is not necessarily limited to food stress) when used with data from each month queried by the estimatePrevalence function.
 
 ### To do list
-* Fix whatever else breaks
-* Add in notes about the new functions and data added
+* Fix whatever breaks
