@@ -3,7 +3,7 @@ Here we present a series of functions and code for facilitating the recreation o
 
 ## Setup
 Environmental data should be downloaded from the link above and placed in a folder named AustraliaClimateData that is to be placed in the working directory. The folder structure should be as follows:
->Your_Working_Directory. 
+>Your_Working_Directory\n
 >\NewRoostPredictedSurfacesModel.Rdata. 
 >\RehabModel_01062022.Rdata  
 >\AustraliaClimateData. 
