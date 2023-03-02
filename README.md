@@ -4,12 +4,12 @@ Here we present a series of functions and code for facilitating the recreation o
 ## Setup
 Environmental data should be downloaded from the link above and placed in a folder named AustraliaClimateData that is to be placed in the working directory. The folder structure should be as follows:
 >Your_Working_Directory
->\NewRoostPredictedSurfacesModel.Rdata
->\RehabModel_01062022.Rdata
->\AustraliaClimateData
->\\EvapotranspirationLag
->\\PrecipitationLag
->\\\PrecipitationLag3Months
+>.   \NewRoostPredictedSurfacesModel.Rdata
+>.   \RehabModel_01062022.Rdata
+>.   \AustraliaClimateData
+>.   \\EvapotranspirationLag
+>.   \\PrecipitationLag
+>.   \\\PrecipitationLag3Months
 >...
 Make sure that the two model objects found in the data folder of this repository are in your working directory as well as the folder containing all of the environmental data. This setup will help to prevent some troubleshooting problems.
 
