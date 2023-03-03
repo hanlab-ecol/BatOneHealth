@@ -2,12 +2,12 @@
 Here we present a series of functions and code for facilitating the recreation of our multi-scale modeling work as part of Bat One Health. The functions described below enable the estimation of monthly Hendra virus prevalence within a region of eastern Australia from the years 2008 to 2019 at a spatial resolution of 5 km. Most of the functions are a series of helper functions used to allow for the attachment of environmental data to coordinates that are used in all of the component models. These environmental data can be currently found [here](https://drive.google.com/drive/folders/1cfwvPG9wID0MgaP332Dt2KXR_zsZXcRR?usp=sharing). 
 
 ## Setup
-Environmental data should be downloaded from the link above and placed in a folder named AustraliaClimateData that is to be placed in the working directory. The folder structure should be as follows:
+Environmental data should be downloaded from the link above and placed in a folder named AustralianClimateData that is to be placed in the working directory. The folder structure should be as follows:
 >Your_Working_Directory<br>
 >\NewRoostPredictedSurfacesModel.Rdata<br>
 >\RehabModel_01062022.Rdata<br>
 >\shortage_reduced_environmental.txt<br>
->\AustraliaClimateData<br>
+>\AustralianClimateData<br>
 >\\EvapotranspirationLag<br>
 >\\PrecipitationLag<br>
 >\\\PrecipitationLag3Months<br>
