@@ -12,7 +12,7 @@ Environmental data should be downloaded from the link above and placed in a fold
 >\\\PrecipitationLag3Months<br>
 >...<br>
 
-Make sure that the two model objects found in the data folder of this repository are in your working directory as well as the folder containing all of the environmental data. This setup will help to prevent some troubleshooting problems.
+Make sure that the two model objects found in the data folder of this repository are in your working directory as well as the folder containing all of the environmental data. This setup will help to prevent some troubleshooting problems. If you download all of the items in the FigShare and place them in a containing folder, the structure described above should be retained.
 
 ## Expected Output
 The output of the main estimatePrevalence function will be a series of rasters estimating Hendra virus prevalence for all months in the specified years. Depending on the model components chosen (see estimatePrevalence function and MultiScaleExample for more information), you will output rasters for estimated prevalence, rehab stress, new roost stress, and a null expectation of stress derived from roost environmental suitability. The output will always include estimated prevalence and the null expectation, with new roost and rehab stress rasters only created when those model components are included.
@@ -52,6 +52,3 @@ This is a gbm model object representing a model trained on roosts that were dete
 
 ### RehabModel_01062022
 This is also a gbm model object representing a model trained on bat rehabilitation data. This model is used to predict stress that would lead to bats ending up at a rehabilitation center (this is not necessarily limited to food stress) when used with data from each month queried by the estimatePrevalence function.
-
-### To do list
-* Fix whatever breaks
