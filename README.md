@@ -6,7 +6,7 @@ Environmental data should be downloaded from the link above and placed in a fold
 >Your_Working_Directory<br>
 >\NewRoostPredictedSurfacesModel.Rdata<br>
 >\RehabModel_01062022.Rdata<br>
->\shortage_reduced_ecological.txt<br>
+>\shortage_reduced_environmental.txt<br>
 >\AustraliaClimateData<br>
 >\\EvapotranspirationLag<br>
 >\\PrecipitationLag<br>
@@ -48,7 +48,7 @@ Hendra virus prevalence data from tested urine pools by [Field et al. 2015](http
 ### bff_one_week_per_quarter_ilya.csv
 This is a CSV of black flying fox roost counts summarized from the [Flying Fox Monitoring Program](https://www.data.qld.gov.au/dataset/flying-fox-monitoring-program) by quarter of the year. This dataset is used by the roost.counts function above to estimate the number of roosts for a given month. 
 
-### shortage_reduced_ecological.txt
+### shortage_reduced_environmental.txt
 This is a text file containing the monthly results from a model predicting food shortages (Lagergren and Ruiz-Aravena et al. in prep).
 
 ### NewRoostPredictedSurfacesModel
