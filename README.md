@@ -6,13 +6,14 @@ Environmental data should be downloaded from the link above and placed in a fold
 >Your_Working_Directory<br>
 >\NewRoostPredictedSurfacesModel.Rdata<br>
 >\RehabModel_01062022.Rdata<br>
+>\shortage_reduced_ecological.txt<br>
 >\AustraliaClimateData<br>
 >\\EvapotranspirationLag<br>
 >\\PrecipitationLag<br>
 >\\\PrecipitationLag3Months<br>
 >...<br>
 
-Make sure that the two model objects found in the data folder of this repository are in your working directory as well as the folder containing all of the environmental data. This setup will help to prevent some troubleshooting problems. If you download all of the items in the FigShare and place them in a containing folder, the structure described above should be retained.
+Make sure that the two model objects and the food shortage model results found in the data folder of this repository are in your working directory as well as the folder containing all of the environmental data. This setup will help to prevent some troubleshooting problems. If you download all of the items in the FigShare and place them in a containing folder, the structure described above should be retained.
 
 ## Expected Output
 The output of the main estimatePrevalence function will be a series of rasters estimating Hendra virus prevalence for all months in the specified years. Depending on the model components chosen (see estimatePrevalence function and MultiScaleExample for more information), you will output rasters for estimated prevalence, rehab stress, new roost stress, and a null expectation of stress derived from roost environmental suitability. The output will always include estimated prevalence and the null expectation, with new roost and rehab stress rasters only created when those model components are included.
@@ -46,6 +47,9 @@ Hendra virus prevalence data from tested urine pools by [Field et al. 2015](http
 
 ### bff_one_week_per_quarter_ilya.csv
 This is a CSV of black flying fox roost counts summarized from the [Flying Fox Monitoring Program](https://www.data.qld.gov.au/dataset/flying-fox-monitoring-program) by quarter of the year. This dataset is used by the roost.counts function above to estimate the number of roosts for a given month. 
+
+### shortage_reduced_ecological.txt
+This is a text file containing the monthly results from a model predicting food shortages (Lagergren and Ruiz-Aravena et al. in prep).
 
 ### NewRoostPredictedSurfacesModel
 This is a gbm model object representing a model trained on roosts that were determined to be newly formed. This model is used to predict stress deriving from the formation of new roosts when used with data from each month queried by the estimatePrevalence function.
