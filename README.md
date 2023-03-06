@@ -1,5 +1,34 @@
 # Bat One Health Functions for the Multi Scale Modeling Effort
-Here we present a series of functions and code for facilitating the recreation of our multi-scale modeling work as part of Bat One Health. The functions described below enable the estimation of monthly Hendra virus prevalence within a region of eastern Australia from the years 2008 to 2019 at a spatial resolution of 5 km. Most of the functions are a series of helper functions used to allow for the attachment of environmental data to coordinates that are used in all of the component models. These environmental data can be currently found [here](https://drive.google.com/drive/folders/1cfwvPG9wID0MgaP332Dt2KXR_zsZXcRR?usp=sharing). 
+Here we present a series of functions and code for facilitating the recreation of our multi-scale modeling work as part of Bat One Health. The functions described below enable the estimation of monthly Hendra virus prevalence within a region of eastern Australia from the years 2008 to 2019 at a spatial resolution of 5 km. Most of the functions are a series of helper functions used to allow for the attachment of environmental data to coordinates that are used in all of the component models. These environmental data can be currently found [here](https://drive.google.com/drive/folders/1cfwvPG9wID0MgaP332Dt2KXR_zsZXcRR?usp=sharing).
+
+The boundaries of our study area are shown in the polygon designated below.
+
+```geojson
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "id": 1,
+      "properties": {
+        "ID": 0
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+              [138.23433,-38.36296],
+              [138.23433,-15.27318],
+              [153.63063,-15.27318],
+              [153.63063,-38.36296],
+              [138.23433,-38.36296]
+          ]
+        ]
+      }
+    }
+  ]
+}
+```
 
 ## Setup
 Environmental data should be downloaded from the link above and placed in a folder named AustralianClimateData that is to be placed in the working directory. The folder structure should be as follows:
