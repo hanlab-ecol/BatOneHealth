@@ -31,13 +31,14 @@ The boundaries of our study area are shown in the polygon designated below.
 ```
 
 ## Setup
-Environmental data should be downloaded from the link above and placed in a folder named AustralianClimateData that is to be placed in the working directory. The folder structure should be as follows:
+Environmental data should be downloaded from the link above, unzipped, and placed in a folder named AustralianClimateData that is to be placed in the working directory. You should download 15 total items from the FigShare link (bat roost predictions, maximum temperature, minimum temperature, temperature difference, precipitation, precipitation anomaly, NDVI, soil moisture, morning vapor pressure, solar exposure, potential evapotranspiration, land cover, ONI, SOI, and SAM). The folder structure should be as follows:
 >Your_Working_Directory<br>
 >\NewRoostPredictedSurfacesModel.Rdata<br>
 >\RehabModel_01062022.Rdata<br>
 >\shortage_reduced_environmental.txt<br>
 >\AustralianClimateData<br>
->\\\EvapotranspirationLag<br>
+>\\\BatRoostPredictions<br>
+>\\\Evapotranspiration<br>
 >\\\PrecipitationLag<br>
 >\\\\\PrecipitationLag2Months<br>
 >\\\\\PrecipitationLag3Months<br>
