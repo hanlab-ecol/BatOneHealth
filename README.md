@@ -1,5 +1,5 @@
 # Bat One Health Functions for the Multi Scale Modeling Effort
-Here we present a series of functions and code for facilitating the recreation of our multi-scale modeling work as part of Bat One Health. The functions described below enable the estimation of monthly Hendra virus prevalence within a region of eastern Australia from the years 2008 to 2019 at a spatial resolution of 5 km. Most of the functions are a series of helper functions used to allow for the attachment of environmental data to coordinates that are used in all of the component models. These environmental data can be currently found [here](https://drive.google.com/drive/folders/1cfwvPG9wID0MgaP332Dt2KXR_zsZXcRR?usp=sharing).
+Here we present a series of functions and code for facilitating the recreation of our multi-scale modeling work as part of Bat One Health. The functions described below enable the estimation of monthly Hendra virus prevalence within a region of eastern Australia from the years 2008 to 2019 at a spatial resolution of 5 km. Most of the functions are a series of helper functions used to allow for the attachment of environmental data to coordinates that are used in all of the component models. These environmental data can be currently found in a FigShare repository [here](https://figshare.com/s/ddb5a1584609b20f6596).
 
 The boundaries of our study area are shown in the polygon designated below.
 
@@ -37,12 +37,14 @@ Environmental data should be downloaded from the link above and placed in a fold
 >\RehabModel_01062022.Rdata<br>
 >\shortage_reduced_environmental.txt<br>
 >\AustralianClimateData<br>
->\\EvapotranspirationLag<br>
->\\PrecipitationLag<br>
->\\\PrecipitationLag3Months<br>
+>\\\EvapotranspirationLag<br>
+>\\\PrecipitationLag<br>
+>\\\\\PrecipitationLag2Months<br>
+>\\\\\PrecipitationLag3Months<br>
+>\\\\\PrecipitationLag6Months<br>
 >...<br>
 
-Make sure that the two model objects and the food shortage model results found in the data folder of this repository are in your working directory as well as the folder containing all of the environmental data. This setup will help to prevent some troubleshooting problems. If you download all of the items in the FigShare and place them in a containing folder, the structure described above should be retained.
+Make sure that the two model objects and the food shortage model results found in the data folder of this repository are in your working directory as well as the folder containing all of the environmental data. This setup will help to prevent some troubleshooting problems. If you download all of the items in the FigShare and place them in a containing folder (`AustralianClimateData` shown above), the structure described above should be retained.
 
 ## Expected Output
 The output of the main estimatePrevalence function will be a series of rasters estimating Hendra virus prevalence for all months in the specified years. Depending on the model components chosen (see estimatePrevalence function and MultiScaleExample for more information), you will output rasters for estimated prevalence, rehab stress, new roost stress, and a null expectation of stress derived from roost environmental suitability. The output will always include estimated prevalence and the null expectation, with new roost and rehab stress rasters only created when those model components are included.
