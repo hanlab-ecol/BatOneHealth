@@ -52,6 +52,8 @@ Make sure that the two model objects and the food shortage model results found i
 ## Expected Output
 The output of the main estimatePrevalence function will be a series of rasters estimating Hendra virus prevalence for all months in the specified years. Depending on the model components chosen (see estimatePrevalence function and MultiScaleExample for more information), you will output rasters for estimated prevalence, rehab stress, new roost stress, and a null expectation of stress derived from roost environmental suitability. The output will always include estimated prevalence and the null expectation, with new roost and rehab stress rasters only created when those model components are included.
 
+Note that function will not produce an object in R. If there are no error messages produced after the function runs, you should see the aforementioned raster files created in your working directory.
+
 ## Descriptions
 The following are descriptions of each of the items included in this repository and how they work together:
 
