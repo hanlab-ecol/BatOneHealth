@@ -1,6 +1,8 @@
 # Bat One Health Functions for the Multi Scale Modeling Effort
 Here we present a series of functions and code for facilitating the recreation of our multi-scale modeling work as part of Bat One Health. The functions described below enable the estimation of monthly Hendra virus prevalence within a region of eastern Australia from the years 2008 to 2019 at a spatial resolution of 5 km. Most of the functions are a series of helper functions used to allow for the attachment of environmental data to coordinates that are used in all of the component models. These environmental data can be currently found in a FigShare repository [here](https://figshare.com/s/ddb5a1584609b20f6596).
 
+The main script you will be working with to run this model is `MultiScaleExample.Rmd` which is mainly concerned with small bits of setup for the running of the `estimatePrevalence` function.
+
 The boundaries of our study area are shown in the polygon designated below.
 
 ```geojson
