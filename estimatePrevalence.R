@@ -7,8 +7,7 @@
 #' @param reps The number of replicate, stochastic draws of roost locations for a given month. Default is 100.
 #' @param buffer The maximum size allowed for foraging areas associated with individual roosts. Default is radius = 50km. This = 50000m.
 #' @param ref.prevalence The maximum prevalence given stressed bats. The default is 0.66 from observed data.
-#' @param food_lag_months The length of the lag to include in calculations of food shortage probability, creating an average of food stress over a period of time. The default is 12 months and a value of 0 months will make sure that no average is used.
-#' @param lag_n The length of the lag to include in rehab stess calculations. The default is 12 months.
+  #' @param lag_n The length of the lag to include in stress calculations, creating average stress for food shortage, new roost, and rehab over a period of time. The default is 12 months.
 #' @param models Dictates the component models to use for estimating prevalence in this multi scale model. By default all three models (food shortage, new roost, and rehab) are included.
 #' @param averaging An argument that allows one to essentially downweight rarer areas not chosen as often. The default value is NA, but switching to 0 will reclassify NAs in the raster to 0, giving rarely chosen areas lower prevalence scores when averaging across repetitions
 #' @param return.stack Whether or not to retain all the annual raster stacks in memory
@@ -16,17 +15,16 @@
 #' @return This function will return an object of terra::SpatRaster-class ranging from 
 #' 1 to 12 layers representing the variable chosen at the time points (year and 
 #' possibly month) chosen. Default is to save to file on 1 year timesteps.
-#' @example estimatePrevalence(path = "~/Desktop/AustralianClimateData", years = c(2008:2019), months = c(1:12), reps = 100, buffer = 50000, ref.prevalence=0.66, food_lag_months = 12, lag_n = 12, models = c("food shortage"), averaging = NA, cl = cl)
+#' @example estimatePrevalence(path = "~/Desktop/AustralianClimateData", n.roosts=104, years = c(1996:2019), months = c(1:12), buffer = 50000, prevalence=0.24)
 
-estimatePrevalence <- function(path=getwd(), years=c(2008:2019), months=c(1:12), reps= 100, buffer=50000, ref.prevalence = 0.66, food_lag_months = 12, lag_n = 12, models = c("food shortage", "new roost", "rehab"), averaging = NA, return.stack=FALSE, cl = NULL){
+estimatePrevalence <- function(path=getwd(), years=c(2008:2020), months=c(1:12), reps= 100, buffer=50000, ref.prevalence = 0.66, lag_n = 12, models = c("food shortage", "new roost", "rehab"), averaging = NA, return.stack=FALSE, cl = NULL){
   if(sum(!models %in% c("food shortage", "new roost", "rehab")) > 0) stop("One or more models specified are not compatible with this function. Please check spelling and the documentation for accepted models.")
   #Read in the model for bat rehab probability
   load("RehabModel_01062022.Rdata") #REHB
   #Read in new overwintering model
   load("NewRoostPredictedSurfacesModel.Rdata") #new.roost.model
-  #Read in food shortage data: this currently goes to 2020-02
-  food.shortage.pred <- read.csv("shortage_reduced_environmental.txt")
-  names(food.shortage.pred) <- c("Date","Probability")
+  #Read in the food shortage model
+  load("FoodShortageModel_5May2023.Rdata") #FOOD
   set.seed=5302022
   n.roosts <- round(roost.counts(n = reps, months = "quarter"), 0)
   #Loop through years and months
@@ -46,8 +44,8 @@ estimatePrevalence <- function(path=getwd(), years=c(2008:2019), months=c(1:12),
       roost.presence[is.nan(roost.presence)] <- 0
       n.roost <- n.roosts[n.roosts[, 1] == years[i] & n.roosts[, 2] == j, -1:-2]
       #n.roosts <- ifelse(length(n.roosts)>1,n.roosts[((i-1)*12)+j],n.roosts) #This takes the number of roosts for the month if using, otherwise the fix number
-      month <- ifelse(j<10,paste(0,j,sep=""),j)
-      time <- paste(years[i],"-",month,sep="")
+      #month <- ifelse(j<10,paste(0,j,sep=""),j)
+      time <- paste(years[i],"-", j ,sep="")
       #Calculate a single replicate for roosts, host condition at roosts, and prevalence
       #Accumulate replicates in a raster stack
       stack <- template
@@ -98,10 +96,27 @@ estimatePrevalence <- function(path=getwd(), years=c(2008:2019), months=c(1:12),
       }
       #food stress condition for the month in question. Data is in YYYY-MM format, formatted above
       if(sum(models %in% "food shortage") == 1) {
-        food.short <- food.shortage.prob(food.shortage.pred=food.shortage.pred, date=time, lag_months = food_lag_months)
+        roost.data <- lapply(roost.data, function(k) food.shortage.prob(roost.data = k, food.shortage.model = FOOD))
       }
       #Combine stress factors into an index. The bat rehab and new roosts will be averaged and then combined additively with the food stress
-      if(sum(models %in% c("rehab", "new roost")) == 2) {
+      if(sum(models %in% c("rehab", "new roost", "food shortage")) == 3) {
+        roost.data <- lapply(roost.data, function(k) {
+          k %>%
+            group_by(row_num) %>%
+            summarise(rehab = mean(rehab, na.rm = T),
+                      food.shortage = mean(food.shortage, na.rm = T)) %>%
+            #new.roost = mean(new.roost, na.rm = T)) %>%
+            ungroup() %>%
+            data.frame()
+        })
+        roost.data <- lapply(1:length(roost.data), function(k) {
+          roost.data[[k]] %>%
+            mutate(new.roost = roosts4[[k]]$new.roost)
+        })
+        space.stress <- lapply(roost.data, function(k) sqrt(k$rehab * k$new.roost))
+        stress <- lapply(1:length(space.stress), function(k) 1 - ((1 - space.stress[[k]]) * (1 - roost.data[[k]]$food.short)))
+      }
+      if(sum(models %in% c("rehab", "new roost")) == 2 & sum(models %in% "food shortage") == 0) {
         roost.data <- lapply(roost.data, function(k) {
           k %>%
             group_by(row_num) %>%
@@ -114,8 +129,8 @@ estimatePrevalence <- function(path=getwd(), years=c(2008:2019), months=c(1:12),
           roost.data[[k]] %>%
             mutate(new.roost = roosts4[[k]]$new.roost)
         })
-        space.stress <- lapply(roost.data, function(k) sqrt(k$rehab * k$new.roost))
-      } else if (sum(models %in% c("rehab", "new roost")) == 1 & sum(models %in% "rehab") == 1) {
+        stress <- lapply(roost.data, function(k) sqrt(k$rehab * k$new.roost))
+      } else if (sum(models %in% c("rehab")) == 1 & sum(models %in% c("food shortage", "new roost")) == 0) {
         roost.data <- lapply(roost.data, function(k) {
           k %>%
             group_by(row_num) %>%
@@ -123,8 +138,19 @@ estimatePrevalence <- function(path=getwd(), years=c(2008:2019), months=c(1:12),
             ungroup() %>%
             data.frame()
         })
+        stress <- lapply(roost.data, function(k) k$rehab)
+      } else if (sum(models %in% c("rehab", "food shortage")) == 2 & sum(models %in% "new roost") == 0) {
+        roost.data <- lapply(roost.data, function(k) {
+          k %>%
+            group_by(row_num) %>%
+            summarise(rehab = mean(rehab, na.rm = T),
+                      food.shortage = mean(food.shortage, na.rm = T)) %>%
+            ungroup() %>%
+            data.frame()
+        })
         space.stress <- lapply(roost.data, function(k) k$rehab)
-      } else if (sum(models %in% c("rehab", "new roost")) == 1 & sum(models %in% "new roost") == 1) {
+        stress <- lapply(1:length(space.stress), function(k) 1 - ((1 - space.stress[[k]]) * (1 - roost.data[[k]]$food.short)))
+      } else if (sum(models %in% c("new roost")) == 1 & sum(models %in% c("rehab", "food shortage")) == 0) {
         #roost.data <- lapply(roost.data, function(k) {
         #  k %>%
         #    group_by(row_num) %>%
@@ -132,14 +158,26 @@ estimatePrevalence <- function(path=getwd(), years=c(2008:2019), months=c(1:12),
         #    ungroup() %>%
         #    data.frame()
         #})
+        stress <- lapply(roosts4, function(k) k$new.roost)
+      } else if(sum(models %in% c("new roost", "food shortage")) == 2 & sum(models %in% "rehab") == 0) {
+        roost.data <- lapply(roost.data, function(k) {
+          k %>%
+            group_by(row_num) %>%
+            summarise(food.shortage = mean(food.shortage, na.rm = T)) %>%
+            ungroup() %>%
+            data.frame()
+        })
         space.stress <- lapply(roosts4, function(k) k$new.roost)
-      }
-      if(sum(models %in% c("rehab", "new roost")) > 0 & sum(models %in% "food shortage") == 1) {
-        stress <- lapply(space.stress, function(k) 1 - ((1 - k) * (1 - food.short)))
-      } else if (sum(models %in% c("rehab", "new roost")) > 0 & sum(models %in% "food shortage") == 0) {
-        stress <- space.stress
-      } else if (sum(models %in% c("rehab", "new roost")) == 0) {
-        stress <- lapply(n.roost, function(k) rep(food.short, k))
+        stress <- lapply(1:length(space.stress), function(k) 1 - ((1 - space.stress[[k]]) * (1 - roost.data[[k]]$food.short)))
+      } else if(sum(models %in% c("rehab", "new roost")) == 0 & sum(models %in% "food shortage") == 1) {
+        roost.data <- lapply(roost.data, function(k) {
+          k %>%
+            group_by(row_num) %>%
+            summarise(food.shortage = mean(food.shortage, na.rm = T)) %>%
+            ungroup() %>%
+            data.frame()
+        })
+        stress <- lapply(roost.data, function(k) k$food.shortage)
       }
       #Multiply index by reference prevalence, this represents maximum prevalence when stress is 100% likely
       prevalence <- lapply(stress, function(k) k * ref.prevalence)
@@ -216,10 +254,8 @@ estimatePrevalence <- function(path=getwd(), years=c(2008:2019), months=c(1:12),
     for(i in 1:length(years)) {
       #Get the SDMs for the given year
       roosts.rast <- rast(paste("AustralianClimateData/BatRoostPredictions/BatRoostPredictions_",years[i],".tif",sep=""))   #SpatRaster for randomization
-      #roosts.rast <- project(roosts.rast,y="epsg:8059") #Tried converting raster instead of points below but didn't work
       #Set up template raster for inputting prevalence later
       template <- rast(roosts.rast[[1]])
-      #template[!is.na(template)] <- 0 #I think unnecessary, part of older version
       out <- template
       year.stack <- template
       for (j in months){
@@ -227,15 +263,13 @@ estimatePrevalence <- function(path=getwd(), years=c(2008:2019), months=c(1:12),
         roost.presence <- roosts.rast[[j]]
         roost.presence[is.nan(roost.presence)] <- 0
         n.roost <- n.roosts[n.roosts[, 1] == years[i] & n.roosts[, 2] == j, -1:-2]
-        month <- ifelse(j<10,paste(0,j,sep=""),j)
+        #month <- ifelse(j<10,paste(0,j,sep=""),j)
         time <- paste(years[i],"-",month,sep="")
         #Calculate a single replicate for roosts, host condition at roosts, and prevalence
         #Accumulate replicates in a raster stack
         stack <- template
         path=paste(getwd(),"/AustralianClimateData/",sep="") #This will be the path that contains the environmental data folders
-        # for (k in 1:reps){
         roosts <- lapply(n.roost, function(k) r.location(roost.presence, n = k))
-        #roosts <- replicate(reps, r.location(roost.presence,n=n.roosts)) #Uses helper function to randomize roost location weighted by the SDM
         #Get environmental data for the roosts
         roosts1 <- lapply(roosts, function(k) sf::st_as_sf(k)) #This is in sf format, used in this projection and format below
         roosts2 <- lapply(roosts1, function(k) sf::st_transform(k, crs=8059)) #This gets roosts in the same projection as the environmental data (Unsure why formats differ initially, seems subtle). Used only in extracting data.
@@ -245,7 +279,7 @@ estimatePrevalence <- function(path=getwd(), years=c(2008:2019), months=c(1:12),
         if(lag_n < j) {
           yrs <- rep(years[i], lag_n)
         } else {
-          yrs <- c(rep(years[i] - 1, lag_n - j), rep(years[i], j))
+          yrs <- c(rep(years[i] - 1, lag_n - j), rep(years[i], j)) #grabs years to match lag months
         }
         roosts3 <- lapply(roosts2, function(k) rep(list(k), lag_n)) #replicates roost data 12 times
         roosts3 <- lapply(roosts3, function(k) do.call(rbind, lapply(1:lag_n, function(p) mutate(k[[p]], month = mnths[p], year = yrs[p]))))
@@ -253,13 +287,13 @@ estimatePrevalence <- function(path=getwd(), years=c(2008:2019), months=c(1:12),
           w_month <- 6:8
           w_year <- ifelse(j <= 8, years[i] - 1, years[i])
           roosts4 <- lapply(roosts2, function(k) rep(list(k), 3))
-          roosts4 <- lapply(roosts4, function(k) fo.call(rbind, lapply(1:3, function(p) mutate(k[[p]], month = w_month[p], year = w_year))))
+          roosts4 <- lapply(roosts4, function(k) do.call(rbind, lapply(1:3, function(p) mutate(k[[p]], month = w_month[p], year = w_year))))
           roosts4 <- attachAustraliaEnv(points = do.call(rbind, roosts4), path = path, year = w_year, month = do.call(rbind, roosts4)$month, log.transform = c("tempMax_2mon", "tempMax_3mon", "prec", "prec_2mon", "tempDiff_2mon","prec_2anom","prec_3anom","solarExposure","solarExposure_12mon"))
           roosts4 <- cbind(roosts4, index = do.call(c, sapply(1:reps, function(k) rep(k, each = n.roost[k] * 3))), row_num = do.call(c, sapply(1:reps, function(p) rep(1:n.roost[p], 3))))
           roosts4 <- lapply(1:reps, function(k) roosts4[roosts4$index == k, ])
         }
         roost.data <- attachAustraliaEnv(points = do.call(rbind, roosts3), path=path, year = do.call(rbind, roosts3)$year, month = do.call(rbind, roosts3)$month, log.transform = c("tempMax_2mon", "tempMax_3mon", "prec", "prec_2mon", "tempDiff_2mon","prec_2anom","prec_3anom","solarExposure","solarExposure_12mon"))
-        roost.data <- cbind(roost.data, index = do.call(c, sapply(1:reps, function(k) rep(k, each = n.roost[k] * lag_n))), row_num = do.call(c, sapply(1:reps, function(p) rep(1:n.roost[p], lag_n)))) #add the rep number to each point according to the number of roosts
+        roost.data <- cbind(roost.data, index = do.call(c, sapply(1:reps, function(k) rep(k, each = n.roost[k] * lag_n))), row_num = do.call(c, sapply(1:reps, function(p) rep(1:n.roost[p], lag_n)))) #add the rep number to each point according to the number of roosts #multiply by lag months to get the appropriate index
         roost.data <- lapply(1:reps, function(k) roost.data[roost.data$index == k, ]) #return to list format
         #probability of bat rehab at roosts, column appended
         if(sum(models %in% "rehab") == 1) {
@@ -278,14 +312,16 @@ estimatePrevalence <- function(path=getwd(), years=c(2008:2019), months=c(1:12),
         }
         #food stress condition for the month in question. Data is in YYYY-MM format, formatted above
         if(sum(models %in% "food shortage") == 1) {
-          food.short <- food.shortage.prob(food.shortage.pred=food.shortage.pred, date=time, lag_months = food_lag_months)
+          roost.data <- lapply(roost.data, function(k) food.shortage.prob(roost.data = k, food.shortage.model = FOOD))
         }
         #Combine stress factors into an index. The bat rehab and new roosts will be averaged and then combined additively with the food stress
-        if(sum(models %in% c("rehab", "new roost")) == 2) {
+        if(sum(models %in% c("rehab", "new roost", "food shortage")) == 3) {
           roost.data <- lapply(roost.data, function(k) {
             k %>%
               group_by(row_num) %>%
-              summarise(rehab = mean(rehab, na.rm = T)) %>%
+              summarise(rehab = mean(rehab, na.rm = T),
+                        food.shortage = mean(food.shortage, na.rm = T)) %>%
+              #new.roost = mean(new.roost, na.rm = T)) %>%
               ungroup() %>%
               data.frame()
           })
@@ -294,7 +330,23 @@ estimatePrevalence <- function(path=getwd(), years=c(2008:2019), months=c(1:12),
               mutate(new.roost = roosts4[[k]]$new.roost)
           })
           space.stress <- lapply(roost.data, function(k) sqrt(k$rehab * k$new.roost))
-        } else if (sum(models %in% c("rehab", "new roost")) == 1 & sum(models %in% "rehab") == 1) {
+          stress <- lapply(1:length(space.stress), function(k) 1 - ((1 - space.stress[[k]]) * (1 - roost.data[[k]]$food.short)))
+        }
+        if(sum(models %in% c("rehab", "new roost")) == 2 & sum(models %in% "food shortage") == 0) {
+          roost.data <- lapply(roost.data, function(k) {
+            k %>%
+              group_by(row_num) %>%
+              summarise(rehab = mean(rehab, na.rm = T)) %>%
+              #new.roost = mean(new.roost, na.rm = T)) %>%
+              ungroup() %>%
+              data.frame()
+          })
+          roost.data <- lapply(1:length(roost.data), function(k) {
+            roost.data[[k]] %>%
+              mutate(new.roost = roosts4[[k]]$new.roost)
+          })
+          stress <- lapply(roost.data, function(k) sqrt(k$rehab * k$new.roost))
+        } else if (sum(models %in% c("rehab")) == 1 & sum(models %in% c("food shortage", "new roost")) == 0) {
           roost.data <- lapply(roost.data, function(k) {
             k %>%
               group_by(row_num) %>%
@@ -302,16 +354,46 @@ estimatePrevalence <- function(path=getwd(), years=c(2008:2019), months=c(1:12),
               ungroup() %>%
               data.frame()
           })
+          stress <- lapply(roost.data, function(k) k$rehab)
+        } else if (sum(models %in% c("rehab", "food shortage")) == 2 & sum(models %in% "new roost") == 0) {
+          roost.data <- lapply(roost.data, function(k) {
+            k %>%
+              group_by(row_num) %>%
+              summarise(rehab = mean(rehab, na.rm = T),
+                        food.shortage = mean(food.shortage, na.rm = T)) %>%
+              ungroup() %>%
+              data.frame()
+          })
           space.stress <- lapply(roost.data, function(k) k$rehab)
-        } else if (sum(models %in% c("rehab", "new roost")) == 1 & sum(models %in% "new roost") == 1) {
+          stress <- lapply(1:length(space.stress), function(k) 1 - ((1 - space.stress[[k]]) * (1 - roost.data[[k]]$food.short)))
+        } else if (sum(models %in% c("new roost")) == 1 & sum(models %in% c("rehab", "food shortage")) == 0) {
+          #roost.data <- lapply(roost.data, function(k) {
+          #  k %>%
+          #    group_by(row_num) %>%
+          #    summarise(new.roost = mean(new.roost, na.rm = T)) %>%
+          #    ungroup() %>%
+          #    data.frame()
+          #})
+          stress <- lapply(roosts4, function(k) k$new.roost)
+        } else if(sum(models %in% c("new roost", "food shortage")) == 2 & sum(models %in% "rehab") == 0) {
+          roost.data <- lapply(roost.data, function(k) {
+            k %>%
+              group_by(row_num) %>%
+              summarise(food.shortage = mean(food.shortage, na.rm = T)) %>%
+              ungroup() %>%
+              data.frame()
+          })
           space.stress <- lapply(roosts4, function(k) k$new.roost)
-        }
-        if(sum(models %in% c("rehab", "new roost")) > 0 & sum(models %in% "food shortage") == 1) {
-          stress <- lapply(space.stress, function(k) 1 - ((1 - k) * (1 - food.short)))
-        } else if (sum(models %in% c("rehab", "new roost")) > 0 & sum(models %in% "food shortage") == 0) {
-          stress <- space.stress
-        } else if (sum(models %in% c("rehab", "new roost")) == 0) {
-          stress <- lapply(n.roost, function(k) rep(food.short, k))
+          stress <- lapply(1:length(space.stress), function(k) 1 - ((1 - space.stress[[k]]) * (1 - roost.data[[k]]$food.short)))
+        } else if(sum(models %in% c("rehab", "new roost")) == 0 & sum(models %in% "food shortage") == 1) {
+          roost.data <- lapply(roost.data, function(k) {
+            k %>%
+              group_by(row_num) %>%
+              summarise(food.shortage = mean(food.shortage, na.rm = T)) %>%
+              ungroup() %>%
+              data.frame()
+          })
+          stress <- lapply(roost.data, function(k) k$food.shortage)
         }
         #Multiply index by reference prevalence, this represents maximum prevalence when stress is 100% likely
         prevalence <- lapply(stress, function(k) k * ref.prevalence)
@@ -330,24 +412,13 @@ estimatePrevalence <- function(path=getwd(), years=c(2008:2019), months=c(1:12),
         map <- lapply(map, function(k) k[which(k[, 2] == k[ ,4]), ])
         map <- lapply(map, function(k) k[!st_is_empty(k), ])
         if(sum(models %in% c("rehab", "new roost")) == 2) {
-          map <- lapply(1:reps, function(k) {
-            cbind(map[[k]], prevalence = prevalence[[k]][inters[[k]]],
-                  rehab = roost.data[[k]]$rehab[inters[[k]]],
-                  newroosts = roost.data[[k]]$new.roost[inters[[k]]])}) #This is the prevalence map for iteration k of the roost locations, order is to match roost locations
+          map <- lapply(1:reps, function(k) cbind(map[[k]], prevalence = prevalence[[k]][inters[[k]]], rehab = roost.data[[k]]$rehab[inters[[k]]], newroosts = roost.data[[k]]$new.roost[inters[[k]]])) #This is the prevalence map for iteration k of the roost locations, order is to match roost locations
         } else if (sum(models %in% c("rehab", "new roost")) == 1 & sum(models %in% "rehab") == 1) {
-          map <- lapply(1:reps, function(k) {
-            cbind(map[[k]],
-                  prevalence = prevalence[[k]][inters[[k]]],
-                  rehab = roost.data[[k]]$rehab[inters[[k]]])})
+          map <- lapply(1:reps, function(k) cbind(map[[k]], prevalence = prevalence[[k]][inters[[k]]], rehab = roost.data[[k]]$rehab[inters[[k]]]))
         } else if (sum(models %in% c("rehab", "new roost")) == 1 & sum(models %in% "new roost") == 1) {
-          map <- lapply(1:reps, function(k) {
-            cbind(map[[k]],
-                  prevalence = prevalence[[k]][inters[[k]]],
-                  newroosts = roost.data[[k]]$new.roost[inters[[k]]])})
+          map <- lapply(1:reps, function(k) cbind(map[[k]], prevalence = prevalence[[k]][inters[[k]]], newroosts = roost.data[[k]]$new.roost[inters[[k]]]))
         } else {
-          map <- lapply(1:reps, function(k) {
-            cbind(map[[k]],
-                  prevalence = prevalence[[k]][inters[[k]]])})
+          map <- lapply(1:reps, function(k) cbind(map[[k]], prevalence = prevalence[[k]][inters[[k]]]))
         }
         #Transfer values to raster
         rast.map <- lapply(1:reps, function(k) rasterize(vect(map[[k]]), template, "prevalence"))
@@ -396,5 +467,3 @@ estimatePrevalence <- function(path=getwd(), years=c(2008:2019), months=c(1:12),
   }
   return(out)
 }
-
-
